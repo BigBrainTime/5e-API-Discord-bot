@@ -30,7 +30,7 @@ async def file_send(interaction: discord.ui.text_input, endpoint: str, index: st
     data = json.loads(requests.get(
         f'https://www.dnd5eapi.co/api/{endpoint if index == '' else f"{endpoint}/{index}"}').text)
     data = json.dumps(data['results'] if endpoint ==
-                      'list' else data, indent=2)
+                      'list' or index == '' else data, indent=2)
 
     if not url:
         data = re.sub(',\n.*"url":.*\n', '', data)
