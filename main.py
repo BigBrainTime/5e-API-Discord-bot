@@ -78,6 +78,7 @@ async def dnd5e(interaction: discord.ui.text_input, endpoint: str = 'list', inde
         await file_send(interaction, endpoint, index, url=url)
 
     elif index != '':  # Valid Endpoint and index to search
+        # TODO wrong way to check if index is valid
         if index in json.loads(requests.get(f'https://www.dnd5eapi.co/api/{endpoint}').text)['results']:
             await file_send(interaction, endpoint, index, url=url)
         else:
