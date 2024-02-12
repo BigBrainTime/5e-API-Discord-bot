@@ -54,7 +54,7 @@ api_endpoint_list = ''
 for endpoint_ in endpoints:
     api_endpoint_list += f'{endpoint_}:{json.loads(requests.get(
         f'https://www.dnd5eapi.co/api/{endpoint_}').text)['count']} Entries\n'
-    
+
 
 @tree.command(name="dnd5e", description='Use endpoint to specify endpoint. Index to specify which index.', guild=discord.Object(id=447967418250297355))
 async def dnd5e(interaction: discord.ui.text_input, endpoint: str = 'list', index: str = '', url: bool = False):
@@ -74,15 +74,8 @@ async def dnd5e(interaction: discord.ui.text_input, endpoint: str = 'list', inde
     elif endpoint == "list":  # Blank Endpoint
         await interaction.response.send_message(embed=discord.Embed(title=endpoint, description=f'```json\n{json.dumps(api_endpoint_list, indent=2)}```'))
 
-    elif index == '':  # Valid Endpoint and blank index
+    else:
         await file_send(interaction, endpoint, index, url=url)
-
-    elif index != '':  # Valid Endpoint and index to search
-        # TODO wrong way to check if index is valid
-        if index in json.loads(requests.get(f'https://www.dnd5eapi.co/api/{endpoint}').text)['results']:
-            await file_send(interaction, endpoint, index, url=url)
-        else:
-            await interaction.response.send_message(embed=discord.Embed(title='5e', description='Invalid index'))
 
 
 @client.event
