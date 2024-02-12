@@ -72,7 +72,7 @@ async def dnd5e(interaction: discord.ui.text_input, endpoint: str = 'list', inde
         await interaction.response.send_message(embed=discord.Embed(title='5e', description='Invalid Endpoint'))
 
     elif endpoint == "list":  # Blank Endpoint
-        await interaction.response.send_message(embed=discord.Embed(title=endpoint, description=f'```json\n{json.dumps(api_endpoint_list, indent=2)}```'))
+        await interaction.response.send_message(embed=discord.Embed(title=endpoint, description=f'```json\n{api_endpoint_list}```'))
 
     else:
         await file_send(interaction, endpoint, index, url=url)
