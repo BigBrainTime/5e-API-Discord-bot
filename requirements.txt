@@ -7,7 +7,7 @@ discord==2.3.2
 discord.py==2.3.2
 frozenlist==1.4.1
 idna==3.6
-multi_dice==0.0.4
+multi_dice==0.0.6
 multidict==6.0.5
 requests==2.31.0
 urllib3==2.2.1
