@@ -4,6 +4,7 @@ import requests
 import re
 from pathlib import Path
 from discord import app_commands
+from multi_dice import roll
 
 TOKEN = 0 #Your token
 SERVERID = 0 #Your server id
@@ -56,7 +57,7 @@ for endpoint_ in endpoints:
         f'https://www.dnd5eapi.co/api/{endpoint_}').text)['count']} Entries\n'
 
 
-@tree.command(name="dnd5e", description='Use endpoint to specify endpoint. Index to specify which index.', guild=discord.Object(id=447967418250297355))
+@tree.command(name="dnd5e", description='Use endpoint to specify endpoint. Index to specify which index.', guild=discord.Object(id=SERVERID))
 async def dnd5e(interaction: discord.ui.text_input, endpoint: str = 'list', index: str = '', url: bool = False):
     """Handles interactions with the D&D 5E API.
 
@@ -77,6 +78,9 @@ async def dnd5e(interaction: discord.ui.text_input, endpoint: str = 'list', inde
     else:
         await file_send(interaction, endpoint, index, url=url)
 
+@tree.command(name="roll", description='Roll a dice', guild=discord.Object(id=SERVERID))
+async def die_roll(interaction: discord.ui.text_input, dice: str = '1d6'):
+    await interaction.response.send_message(embed=discord.Embed(title=dice, description=str(roll(dice))))
 
 @client.event
 async def on_ready():
