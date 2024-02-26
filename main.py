@@ -78,7 +78,7 @@ async def dnd5e(interaction: discord.ui.text_input, endpoint: str = 'list', inde
     else:
         await file_send(interaction, endpoint, index, url=url)
 
-@tree.command(name="roll", description='Roll a dice', guild=discord.Object(id=SERVERID))
+@tree.command(name="roll", description='Roll a die', guild=discord.Object(id=SERVERID))
 async def die_roll(interaction: discord.ui.text_input, dice: str = '1d6'):
     await interaction.response.send_message(embed=discord.Embed(title=dice, description=str(roll(dice))))
 
