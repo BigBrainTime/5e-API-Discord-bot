@@ -78,9 +78,20 @@ async def dnd5e(interaction: discord.ui.text_input, endpoint: str = 'list', inde
     else:
         await file_send(interaction, endpoint, index, url=url)
 
-@tree.command(name="roll", description='Roll a die', guild=discord.Object(id=SERVERID))
-async def die_roll(interaction: discord.ui.text_input, dice: str = '1d6'):
-    await interaction.response.send_message(embed=discord.Embed(title=dice, description=str(roll(dice))))
+@tree.command(name="roll", description="Roll a die", guild=discord.Object(id=SERVERID))
+async def die_roll(interaction: discord.ui.text_input, dice: str = "1d6"):
+    """Rolls a die.
+
+    Rolls a die with the specified number of sides. The default is a standard 6-sided die.
+
+    Parameters:
+    - interaction: The Discord interaction object. 
+    - dice: The dice roll to make, in NdN format.
+    """
+    await interaction.response.send_message(
+        embed=discord.Embed(title=dice, description=str(roll(dice)))
+    )
+
 
 @client.event
 async def on_ready():
