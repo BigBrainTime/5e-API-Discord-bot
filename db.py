@@ -78,6 +78,30 @@ def get_all_image_ids():
     return image_ids
 
 
+def get_image_ids_by_creature(creature):
+    connection, cursor = connect()
+
+    cursor.execute("SELECT imageID FROM images WHERE creature=?", (creature,))
+    results = cursor.fetchall()
+
+    image_ids = [result[0] for result in results]
+
+    close(connection)
+    return image_ids
+
+
+def get_all_creatures():
+    connection, cursor = connect()
+
+    cursor.execute("SELECT DISTINCT creature FROM images")
+    results = cursor.fetchall()
+
+    creatures = [result[0] for result in results]
+
+    close(connection)
+    return creatures
+
+
 def revoke_apikeys(user_id):
     connection, cursor = connect()
 

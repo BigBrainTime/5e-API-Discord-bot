@@ -60,7 +60,7 @@ def get_image_ids():
 @app.get("/api/get_image/<creature>/<imageID>")
 def get_image(creature, imageID):
     if creature == "":
-        creaturelist = os.listdir("/images")
+        creaturelist = db.get_all_creatures()
         results = {
             "count":len(creaturelist),
             "data":creaturelist
@@ -68,11 +68,11 @@ def get_image(creature, imageID):
 
         return orjson.dumps(results)
     
-    if creature not in os.listdir("/images"):
+    if creature not in db.get_all_creatures():
         return errors["Not Valid Creature"]
     
     if imageID == "":
-        IDlist = os.listdir(os.path.join("images",creature))
+        IDlist = db.get_image_ids_by_creature(creature)
         results = {
             "count": len(IDlist),
             "data": [ID.replace(".jpg","") for ID in IDlist]
@@ -80,7 +80,7 @@ def get_image(creature, imageID):
 
         return orjson.dumps(results)
 
-    if f"{imageID}.jpg" not in os.listdir(os.path.join("images",creature)):
+    if f"{imageID}.jpg" not in db.get_image_ids_by_creature(creature):
         realcreature = db.get_creature(imageID)
         if realcreature is None:
             return errors["Not Valid imageID"]
