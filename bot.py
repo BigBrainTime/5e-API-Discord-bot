@@ -39,7 +39,7 @@ async def file_send(interaction: discord.Interaction, endpoint: str, index: str,
     The function makes a request to the D&D 5E API, processes the JSON data, and sends it 
     as a message embed or file attachment if too large. Handles paginated list endpoints.
     """
-    await interaction.response.send_message(embed=discord.Embed(title=endpoint, description='Please Wait'))
+    await interaction.response.defer()
 
     data = json.loads(requests.get(
         f'https://www.dnd5eapi.co/api/{endpoint if index == '' else f"{endpoint}/{index}"}').text)
@@ -56,14 +56,14 @@ async def file_send(interaction: discord.Interaction, endpoint: str, index: str,
         Path(f'5e/{endpoint}/').mkdir(parents=True, exist_ok=True)
         with open(f'5e/{endpoint}/{index}.json', 'w') as file_save:
             file_save.write(data)
-        await interaction.edit_original_response(embed=discord.Embed(title=endpoint, description='Data Too Large, Sending File'))
+        await interaction.followup.send(embed=discord.Embed(title=endpoint, description='Data Too Large, Sending File'))
         await client.get_channel(interaction.channel.id).send(file=discord.File(f'5e/{endpoint}/{index}.json'))
 
     else:
-        await interaction.edit_original_response(embed=discord.Embed(title=f'{endpoint} {index}', description=f"```json\n{data}```"))
+        await interaction.followup.send(embed=discord.Embed(title=f'{endpoint} {index}', description=f"```json\n{data}```"))
 
+endpoints = json.loads(requests.get('https://www.dnd5eapi.co/api/').text)
 if not os.path.isfile("api_endpoints.txt"):
-    endpoints = json.loads(requests.get('https://www.dnd5eapi.co/api/').text)
     api_endpoint_list = ''
     for endpoint_ in endpoints:
         api_endpoint_list += f'{endpoint_}:{json.loads(requests.get(
