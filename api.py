@@ -19,6 +19,10 @@ errors = {
     "Not Found": (orjson.dumps({"error": "Not Found"}), 404),
 }
 
+@app.get('/api')
+def api_home():
+    endpoints = ["image_data","get_image_ids","get_image"]
+    return orjson.dumps(endpoints)
 
 @app.get('/api/image_data')
 def image_data():
