@@ -1,5 +1,6 @@
 import sqlite3
 from time import time
+from operator import itemgetter
 
 def connect():
     connection = sqlite3.connect("database/images.db")
@@ -66,13 +67,57 @@ def get_creature(image_id):
     return creature
 
 
+def increment_votes(image_id):
+    connection, cursor = connect()
+
+    cursor.execute(
+        "UPDATE images SET voted = voted + 1 WHERE imageID = ?", (image_id,))
+
+    close(connection)
+
+
+def increment_ranking(image_id):
+    connection, cursor = connect()
+
+    cursor.execute(
+        "UPDATE images SET ranking = ranking + 1 WHERE imageID = ?", (image_id,))
+
+    close(connection)
+
+
+def get_bottom_voted():
+    connection, cursor = connect()
+
+    cursor.execute(
+        "SELECT creature, imageID, voted, ranking, userID FROM images")
+    results = cursor.fetchall()
+
+    bottom_voted = sorted(results, key=itemgetter(2))
+    bottom_voted = bottom_voted[:len(bottom_voted)//2]
+
+    close(connection)
+    return bottom_voted
+
+
+def get_userID(image_id):
+    connection, cursor = connect()
+
+    cursor.execute("SELECT userID FROM images WHERE imageID=?", (image_id,))
+    result = cursor.fetchone()
+
+    user_id = result[0] if result else None
+
+    close(connection)
+    return user_id
+
+
 def get_all_image_ids():
     connection, cursor = connect()
 
     cursor.execute("SELECT imageID FROM images")
     results = cursor.fetchall()
 
-    image_ids = [result[0] for result in results]
+    image_ids = results
 
     close(connection)
     return image_ids
@@ -84,10 +129,8 @@ def get_image_ids_by_creature(creature):
     cursor.execute("SELECT imageID FROM images WHERE creature=?", (creature,))
     results = cursor.fetchall()
 
-    image_ids = [result[0] for result in results]
-
     close(connection)
-    return image_ids
+    return results
 
 
 def get_all_creatures():
@@ -96,10 +139,8 @@ def get_all_creatures():
     cursor.execute("SELECT DISTINCT creature FROM images")
     results = cursor.fetchall()
 
-    creatures = [result[0] for result in results]
-
     close(connection)
-    return creatures
+    return results
 
 
 def revoke_apikeys(user_id):

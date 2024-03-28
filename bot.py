@@ -4,6 +4,7 @@ import requests
 import re
 import os
 import shutil
+import random
 import db
 from uuid import uuid4
 from pathlib import Path
@@ -25,10 +26,11 @@ intents = discord.Intents().all()
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
 
-async def file_send(interaction: discord.ui.text_input, endpoint: str, index: str, url: bool = False):
+
+async def file_send(interaction: discord.Interaction, endpoint: str, index: str, url: bool = False):
     """Sends a Discord message with data from a D&D 5E API endpoint.
 
-    Parameters:
+    Parameters:.Interaction
     - interaction (discord.Interaction): The Discord interaction object.
     - endpoint (str): The API endpoint to request data from.
     - index (str): The index of a specific item in the endpoint.
@@ -60,16 +62,20 @@ async def file_send(interaction: discord.ui.text_input, endpoint: str, index: st
     else:
         await interaction.edit_original_response(embed=discord.Embed(title=f'{endpoint} {index}', description=f"```json\n{data}```"))
 
-
-endpoints = json.loads(requests.get('https://www.dnd5eapi.co/api/').text)
-api_endpoint_list = ''
-for endpoint_ in endpoints:
-    api_endpoint_list += f'{endpoint_}:{json.loads(requests.get(
-        f'https://www.dnd5eapi.co/api/{endpoint_}').text)['count']} Entries\n'
-
+if not os.path.isfile("api_endpoints.txt"):
+    endpoints = json.loads(requests.get('https://www.dnd5eapi.co/api/').text)
+    api_endpoint_list = ''
+    for endpoint_ in endpoints:
+        api_endpoint_list += f'{endpoint_}:{json.loads(requests.get(
+            f'https://www.dnd5eapi.co/api/{endpoint_}').text)['count']} Entries\n'
+    with open("api_endpoints.txt","w+") as file:
+        file.write(api_endpoint_list)
+else:
+    with open("api_endpoints.txt") as file:
+        api_endpoint_list = file.read()
 
 @tree.command(name="dnd5e", description='Use endpoint to specify endpoint. Index to specify which index.', guild=discord.Object(id=SERVERID))
-async def dnd5e(interaction: discord.ui.text_input, endpoint: str = 'list', index: str = '', url: bool = False):
+async def dnd5e(interaction: discord.Interaction, endpoint: str = 'list', index: str = '', url: bool = False):
     """Handles interactions with the D&D 5E API.
 
     Parameters:
@@ -90,7 +96,7 @@ async def dnd5e(interaction: discord.ui.text_input, endpoint: str = 'list', inde
         await file_send(interaction, endpoint, index, url=url)
 
 @tree.command(name="roll", description="Roll a die", guild=discord.Object(id=SERVERID))
-async def die_roll(interaction: discord.ui.text_input, dice: str = "1d6"):
+async def die_roll(interaction: discord.Interaction, dice: str = "1d6"):
     """Rolls a die.
 
     Rolls a die with the specified number of sides. The default is a standard 6-sided die.
@@ -128,7 +134,7 @@ def user_allowed_db(user, accounts_only=False):
 
 
 @tree.command(name="upload_image", description="Upload an image to be voted on", guild=discord.Object(id=SERVERID))
-async def image_upload(interaction: discord.ui.text_input, creature: str, image_url: str):
+async def image_upload(interaction: discord.Interaction, creature: str, image_url: str):
     """Uploads an image to be voted on.
 
     This command allows a user to upload an image of a creature, which can then be voted on. It checks that the user has permission to upload images, validates the URL, downloads the image, gives it a unique ID, stores it in the database, and saves it to the images folder before responding.
@@ -172,18 +178,87 @@ async def image_upload(interaction: discord.ui.text_input, creature: str, image_
         shutil.copyfileobj(image_request.raw, f)
 
 
+class VoteYesButton(discord.ui.Button):
+  def __init__(self, view:discord.ui.View, imageID:str):
+    super().__init__(style=discord.ButtonStyle.green, label="Yes")
+    self.button_view = view
+    self.ID = imageID
+
+  async def callback(self, interaction: discord.Interaction):
+    self.button_view.stop()
+    await interaction.response.send_message("Vote Submitted")
+    db.increment_ranking(self.ID)
+    db.increment_votes(self.ID)
+
+class VoteNoButton(discord.ui.Button):
+  def __init__(self, view: discord.ui.View, imageID: str):
+    super().__init__(style=discord.ButtonStyle.red, label="No")
+    self.button_view = view
+    self.ID = imageID
+
+  async def callback(self, interaction: discord.Interaction):
+    self.button_view.stop()
+    await interaction.response.send_message("Vote Submitted")
+    db.increment_votes(self.ID)
+
+@tree.command(name="vote_image", description="Find a creature with the least votes for a simple yes/no vote", guild=discord.Object(id=SERVERID))
+async def pick_least_voted(interaction: discord.Interaction):
+    """Gets the creature with the least votes and prompts users to vote yes/no on the image.
+
+    This command finds a random creature image that has the least votes out of the images in the database, 
+    and prompts the user to vote yes or no on that image. 
+
+    It displays the image, creature name, and vote ranking. 
+    It also shows who originally submitted the image.
+
+    The yes/no vote buttons update the vote count for that image in the database.
+    """
+    await interaction.response.defer()
+    creature, imageID, total_votes, ranking, userID = random.choice(db.get_bottom_voted())
+
+    creature_path = os.path.join("images", creature, f"{imageID}.jpg")
+
+    view = discord.ui.View()
+    view.add_item(VoteNoButton(view, imageID))
+    view.add_item(VoteYesButton(view, imageID))
+
+    await interaction.followup.send(f"Cast your vote for this image of `{creature}` submitted by `{client.get_user(userID)}` that has {ranking}/{total_votes} votes:", view=view, file=discord.File(creature_path))
+
+
 @tree.command(name="generate_api_key", description="Generate a personal API key", guild=discord.Object(id=SERVERID))
-async def generate_api_key(interaction: discord.ui.text_input, key_name: str = ""):
+async def generate_api_key(interaction: discord.Interaction, key_name: str = ""):
+    """
+    Generates a new API key for the user and saves it to the database.
+
+    Parameters:
+    interaction (discord.Interaction): The interaction object.
+    key_name (str): Optional name for the key.
+
+    Returns:
+    None. Sends a response to the user with the generated key.
+
+    Saves the key to the database associated with the user's ID.
+    """
     if not user_allowed_db(interaction.user):
         return await interaction.response.send_message(embed=discord.Embed(title="Not allowed to obtain key", description="If this is an error contact a member of staff"))
 
     key = str(uuid4())
     await interaction.response.send_message(embed=discord.Embed(title="API Key (DO NOT SHARE)", description=f"{key}\n\nSet as 'Authorization' header"), ephemeral=True)
 
-    db.add_apikey(key,interaction.user.id,key_name)
+    db.add_apikey(key, interaction.user.id, key_name)
 
-@tree.command(name="revoke_apikeys", description="Revoke all api keys for a user")
+
+@tree.command(name="revoke_apikeys", description="Revoke all api keys for a user", guild=discord.Object(id=SERVERID))
 async def revoke_apikeys(interaction: discord.Interaction, user: discord.Member):
+    """Revokes all API keys associated with the given user ID in the database.
+
+    Parameters:
+    interaction (discord.Interaction): The interaction object.
+    user (discord.Member): The Discord user whose keys should be revoked.
+
+    Returns:
+    None. Sends a response to the user confirming revocation.
+    """
     if not user_allowed_db(interaction.user, True):
         return await interaction.response.send_message("You do not have permission to revoke API keys")
 
