@@ -149,7 +149,7 @@ async def image_upload(interaction: discord.Interaction, creature: str, image_ur
 
     url_allowed = False
     for url in allowed_image_urls:
-        if url in image_url:
+        if image_url.startswith(url):
             url_allowed = True
             break
 
