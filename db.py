@@ -163,19 +163,27 @@ def verify_apikey(api_key):
     return valid
 
 
-def api_key_access(api_key, request, creature="", image_id="", user_id=""):
-    if not verify_apikey(api_key):
-        return "Invalid API key"
+def api_key_access(request, sqllogic, sqlparams):
+    #if not verify_apikey(api_key):
+    #    return "Invalid API key"
 
     connection, cursor = connect()
 
     if request == "get_image_data":
-        cursor.execute("SELECT * FROM images WHERE ? IN (creature, '') OR ? IN (imageID, '') OR ? IN (userID, '')",
-                    (creature, image_id, user_id))
+        cursor.execute(f"SELECT * FROM images WHERE {sqllogic}", sqlparams)
         
-        result = cursor.fetchall()
+        results = cursor.fetchall()
         close(connection)
-        return result
+        for creature in range(len(results)):
+            results[creature] = {
+                "creature": results[creature][0],
+                "imageID": results[creature][1],
+                "userID": results[creature][2],
+                "time": results[creature][3],
+                "ranked": results[creature][4],
+                "voted": results[creature][5]
+            }
+        return results
 
     close(connection)
     return "Invalid Request"

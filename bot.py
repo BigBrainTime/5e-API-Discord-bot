@@ -6,16 +6,23 @@ import os
 import shutil
 import random
 import db
+from jsonsql import JsonSQL
 from uuid import uuid4
 from pathlib import Path
 from discord import app_commands
 from multi_dice import roll
+from pydoc import locate
 
 with open("config.json") as settings:
     config = json.loads(settings.read())
 
 TOKEN = config["TOKEN"]
 SERVERID = config["ServerID"]
+
+for column_type in config["allowed_columns"]:
+    config["allowed_columns"][column_type] = locate(config["allowed_columns"][column_type])
+jsonsql = JsonSQL(config['allowed_queries'], config['allowed_items'],
+                  config['allowed_tables'], config['allowed_connections'], config['allowed_columns'])
 
 level0Roles = config["level0Roles"]
 level0Accounts = config["level0Accounts"]
@@ -177,6 +184,18 @@ async def image_upload(interaction: discord.Interaction, creature: str, image_ur
         image_request.raw.decode_content = True
         shutil.copyfileobj(image_request.raw, f)
 
+
+@tree.command(name="basic_db", description="Upload jsonsql to access image database", guild=discord.Object(id=SERVERID))
+async def basic_sql_access(interaction: discord.Interaction, json_sql:str="{}"):
+    results = jsonsql.logic_parse(json.loads(json_sql))
+    if not results[0]:
+        return await interaction.response.send_message(results[1])
+    sql_string, sql_params = results[1:]
+    
+    if not isinstance(sql_params,tuple):
+        sql_params = (sql_params,)
+
+    await interaction.response.send_message(db.api_key_access("get_image_data",sql_string,sql_params))
 
 class VoteYesButton(discord.ui.Button):
   def __init__(self, view:discord.ui.View, imageID:str):

@@ -7,6 +7,9 @@ class JsonSQL():
         self.ALLOWED_COLUMNS = allowed_columns
 
     def logic_parse(self, json_input: dict):
+        if len(json_input) == 0:
+            return False, "Nothing To Compute"
+        
         value: str = list(json_input.keys())[0]
         if value not in ("AND", "OR") and value not in self.ALLOWED_COLUMNS:
             return False, f"Invalid Input - {value}"
@@ -48,6 +51,9 @@ class JsonSQL():
                 output.append(entry[0])
 
             params = tuple(params)
+
+            if not isinstance(params,tuple):
+                params = (params,)
 
             data = f"({f" {value.upper()} ".join(output)})"
 

@@ -10,7 +10,7 @@ with open("config.json") as file:
 host = config["HOST"]
 port = config["PORT"]
 for column_type in config["allowed_columns"]:
-    config["allowed_columns"][column_type]=locate(column_type)
+    config["allowed_columns"][column_type] = locate(config["allowed_columns"][column_type])
 jsonsql = JsonSQL(config['allowed_queries'], config['allowed_items'],
                   config['allowed_tables'], config['allowed_connections'], config['allowed_columns'])
 
@@ -35,20 +35,25 @@ def api_home():
 
 @app.get('/api/image_data')
 def image_data():
-    auth_header = request.headers.get('Authorization')
-    if not auth_header:
-        return errors['Missing Authorization header']
+    #auth_header = request.headers.get('Authorization')
+    #if not auth_header:
+    #    return errors['Missing Authorization header']
     
-    if not db.verify_apikey(auth_header):
-        return errors['Invalid API key']
+    #if not db.verify_apikey(auth_header):
+    #    return errors['Invalid API key']
 
     data = request.get_json()
-    creature = data.get('creature')
-    image_id = data.get('imageID')
-    user_id = data.get('userID')
+    basic_logic = data.get('logic')
 
-    result_data = db.api_key_access(
-        auth_header, "get_image_data", creature, image_id, user_id)
+    logic_results = jsonsql.logic_parse(basic_logic)
+    if not logic_results[0]:
+        return orjson.dumps({"JsonSQL error":logic_results[1]})
+    sql_string, sql_params = logic_results[1:]
+
+    if not isinstance(sql_params, tuple):
+        sql_params = (sql_params,)
+
+    result_data = db.api_key_access("get_image_data", sql_string, sql_params)
 
     results = {
         "count":len(result_data),
