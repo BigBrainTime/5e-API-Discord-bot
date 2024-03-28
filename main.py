@@ -2,6 +2,7 @@ import discord
 import json
 import requests
 import re
+import os
 from pathlib import Path
 from discord import app_commands
 from multi_dice import roll
@@ -14,7 +15,7 @@ client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
 
 
-async def file_send(interaction: discord.ui.text_input, endpoint: str, index: str, url: bool = False):
+async def file_send(interaction: discord.Interaction, endpoint: str, index: str, url: bool = False):
     """Sends a Discord message with data from a D&D 5E API endpoint.
 
     Parameters:
@@ -50,15 +51,21 @@ async def file_send(interaction: discord.ui.text_input, endpoint: str, index: st
         await interaction.edit_original_response(embed=discord.Embed(title=f'{endpoint} {index}', description=f"```json\n{data}```"))
 
 
-endpoints = json.loads(requests.get('https://www.dnd5eapi.co/api/').text)
-api_endpoint_list = ''
-for endpoint_ in endpoints:
-    api_endpoint_list += f'{endpoint_}:{json.loads(requests.get(
-        f'https://www.dnd5eapi.co/api/{endpoint_}').text)['count']} Entries\n'
+if not os.path.isfile("api_endpoints.txt"):
+    endpoints = json.loads(requests.get('https://www.dnd5eapi.co/api/').text)
+    api_endpoint_list = ''
+    for endpoint_ in endpoints:
+        api_endpoint_list += f'{endpoint_}:{json.loads(requests.get(
+            f'https://www.dnd5eapi.co/api/{endpoint_}').text)['count']} Entries\n'
+    with open("api_endpoints.txt", "w+") as file:
+        file.write(api_endpoint_list)
+else:
+    with open("api_endpoints.txt") as file:
+        api_endpoint_list = file.read()
 
 
 @tree.command(name="dnd5e", description='Use endpoint to specify endpoint. Index to specify which index.', guild=discord.Object(id=SERVERID))
-async def dnd5e(interaction: discord.ui.text_input, endpoint: str = 'list', index: str = '', url: bool = False):
+async def dnd5e(interaction: discord.Interaction, endpoint: str = 'list', index: str = '', url: bool = False):
     """Handles interactions with the D&D 5E API.
 
     Parameters:
@@ -79,7 +86,7 @@ async def dnd5e(interaction: discord.ui.text_input, endpoint: str = 'list', inde
         await file_send(interaction, endpoint, index, url=url)
 
 @tree.command(name="roll", description="Roll a die", guild=discord.Object(id=SERVERID))
-async def die_roll(interaction: discord.ui.text_input, dice: str = "1d6"):
+async def die_roll(interaction: discord.Interaction, dice: str = "1d6"):
     """Rolls a die.
 
     Rolls a die with the specified number of sides. The default is a standard 6-sided die.
