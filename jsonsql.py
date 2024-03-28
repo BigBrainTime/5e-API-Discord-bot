@@ -70,10 +70,9 @@ class JsonSQL():
         if json_input["query"] not in self.ALLOWED_QUERIES:
             return False, f"Query not allowed - {json_input["query"]}"
 
-        if "*" not in self.ALLOWED_ITEMS:
-            for item in json_input["items"]:
-                if json_input["items"] not in self.ALLOWED_ITEMS:
-                    return False, f"Item not allowed - {json_input["items"]}"
+        for item in json_input["items"]:
+            if json_input["items"] not in self.ALLOWED_ITEMS:
+                return False, f"Item not allowed - {json_input["items"]}"
                 
         if json_input["table"] not in self.ALLOWED_TABLES:
             return False, f"Table not allowed - {json_input['table']}"
