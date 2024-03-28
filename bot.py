@@ -145,7 +145,7 @@ async def image_upload(interaction: discord.Interaction, creature: str, image_ur
     - image_url: The URL of the image to upload.
     """
     if not user_allowed_db(interaction.user):
-        return await interaction.response.send_message(embed=discord.Embed(title="Not allowed to upload images", description="If this is an error contact a member of staff"))
+        return await interaction.response.send_message(embed=discord.Embed(title="Not allowed to upload images", description="If this is an error contact a member of staff"),ephemeral=True)
 
     url_allowed = False
     for url in allowed_image_urls:
@@ -154,11 +154,11 @@ async def image_upload(interaction: discord.Interaction, creature: str, image_ur
             break
 
     if not url_allowed:
-        return await interaction.response.send_message(embed=discord.Embed(title="Invalid URL", description=f"({image_url}) is an invalid url. URL not in allowed urls of {allowed_image_urls}"))
+        return await interaction.response.send_message(embed=discord.Embed(title="Invalid URL", description=f"({image_url}) is an invalid url. URL not in allowed urls of {allowed_image_urls}"), ephemeral=True)
 
     image_request = requests.get(image_url, stream=True)
     if image_request.status_code != 200:
-        return await interaction.response.send_message(embed=discord.Embed(title="Invalid URL", description=f"Status code:{image_request.status_code}"))
+        return await interaction.response.send_message(embed=discord.Embed(title="Invalid URL", description=f"Status code:{image_request.status_code}"), ephemeral=True)
 
     creature = creature.strip()
     for character in (" ", "/", "\\", "."):
@@ -169,7 +169,7 @@ async def image_upload(interaction: discord.Interaction, creature: str, image_ur
 
     ID = str(uuid4())
 
-    await interaction.response.send_message(embed=discord.Embed(title="Creature Added", description=f"Creature ID: {ID}"))
+    await interaction.response.send_message(embed=discord.Embed(title="Creature Added", description=f"Creature ID: {ID}"), ephemeral=True)
 
     db.add_image(creature, ID, interaction.user.id)
 
@@ -186,7 +186,7 @@ class VoteYesButton(discord.ui.Button):
 
   async def callback(self, interaction: discord.Interaction):
     self.button_view.stop()
-    await interaction.response.send_message("Vote Submitted")
+    await interaction.response.send_message("Vote Submitted", ephemeral=True)
     db.increment_ranking(self.ID)
     db.increment_votes(self.ID)
 
@@ -198,7 +198,7 @@ class VoteNoButton(discord.ui.Button):
 
   async def callback(self, interaction: discord.Interaction):
     self.button_view.stop()
-    await interaction.response.send_message("Vote Submitted")
+    await interaction.response.send_message("Vote Submitted", ephemeral=True)
     db.increment_votes(self.ID)
 
 @tree.command(name="vote_image", description="Find a creature with the least votes for a simple yes/no vote", guild=discord.Object(id=SERVERID))
@@ -213,7 +213,7 @@ async def pick_least_voted(interaction: discord.Interaction):
 
     The yes/no vote buttons update the vote count for that image in the database.
     """
-    await interaction.response.defer()
+    await interaction.response.defer(ephemeral=True)
     creature, imageID, total_votes, ranking, userID = random.choice(db.get_bottom_voted())
 
     creature_path = os.path.join("images", creature, f"{imageID}.jpg")
@@ -222,7 +222,7 @@ async def pick_least_voted(interaction: discord.Interaction):
     view.add_item(VoteNoButton(view, imageID))
     view.add_item(VoteYesButton(view, imageID))
 
-    await interaction.followup.send(f"Cast your vote for this image of `{creature}` submitted by `{client.get_user(userID)}` that has {ranking}/{total_votes} votes:", view=view, file=discord.File(creature_path))
+    await interaction.followup.send(f"Cast your vote for this image of `{creature}` submitted by `{client.get_user(userID)}` that has {ranking}/{total_votes} votes:", view=view, file=discord.File(creature_path), ephemeral=True)
 
 
 @tree.command(name="generate_api_key", description="Generate a personal API key", guild=discord.Object(id=SERVERID))
@@ -240,7 +240,7 @@ async def generate_api_key(interaction: discord.Interaction, key_name: str = "")
     Saves the key to the database associated with the user's ID.
     """
     if not user_allowed_db(interaction.user):
-        return await interaction.response.send_message(embed=discord.Embed(title="Not allowed to obtain key", description="If this is an error contact a member of staff"))
+        return await interaction.response.send_message(embed=discord.Embed(title="Not allowed to obtain key", description="If this is an error contact a member of staff"), ephemeral=True)
 
     key = str(uuid4())
     await interaction.response.send_message(embed=discord.Embed(title="API Key (DO NOT SHARE)", description=f"{key}\n\nSet as 'Authorization' header"), ephemeral=True)
@@ -260,11 +260,11 @@ async def revoke_apikeys(interaction: discord.Interaction, user: discord.Member)
     None. Sends a response to the user confirming revocation.
     """
     if not user_allowed_db(interaction.user, True):
-        return await interaction.response.send_message("You do not have permission to revoke API keys")
+        return await interaction.response.send_message("You do not have permission to revoke API keys", ephemeral=True)
 
     db.revoke_apikeys(user.id)
 
-    await interaction.response.send_message(f"Revoked all API keys for {user.mention}")
+    await interaction.response.send_message(f"Revoked all API keys for {user.mention}", ephemeral=True)
 
 
 @client.event
