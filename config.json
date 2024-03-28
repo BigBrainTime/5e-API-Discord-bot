@@ -1,7 +1,25 @@
 {
     "TOKEN": "",
     "ServerID": 0,
+    "HOST": "0.0.0.0",
+    "PORT": 8080,
     "level0Roles": [],
     "level0Accounts": [],
-    "allowed_image_urls": ["https://cdn.discordapp.com/"]
+    "allowed_image_urls": ["https://cdn.discordapp.com/"],
+    "allowed_queries": [
+        "SELECT"
+    ],
+    "allowed_items": [
+        "*"
+    ],
+    "allowed_connections": [
+        "WHERE"
+    ],
+    "allowed_tables": [
+        "images"
+    ],
+    "allowed_columns": {
+        "creature": "str",
+        "userID": "int"
+    }
 }

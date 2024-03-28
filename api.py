@@ -1,10 +1,19 @@
 import db
 import orjson
 import os
+from jsonsql import JsonSQL
 from flask import Flask, request, send_file
+from pydoc import locate
 
-host = "0.0.0.0"
-port = "8080"
+with open("config.json") as file:
+    config = orjson.loads(file.read())
+host = config["HOST"]
+port = config["PORT"]
+for column_type in config["allowed_columns"]:
+    config["allowed_columns"][column_type]=locate(column_type)
+jsonsql = JsonSQL(config['allowed_queries'], config['allowed_items'],
+                  config['allowed_tables'], config['allowed_connections'], config['allowed_columns'])
+
 
 app = Flask(__name__)
 
