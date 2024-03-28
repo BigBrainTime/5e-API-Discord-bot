@@ -51,8 +51,8 @@ async def file_send(interaction: discord.Interaction, endpoint: str, index: str,
         await interaction.edit_original_response(embed=discord.Embed(title=f'{endpoint} {index}', description=f"```json\n{data}```"))
 
 
+endpoints = json.loads(requests.get('https://www.dnd5eapi.co/api/').text)
 if not os.path.isfile("api_endpoints.txt"):
-    endpoints = json.loads(requests.get('https://www.dnd5eapi.co/api/').text)
     api_endpoint_list = ''
     for endpoint_ in endpoints:
         api_endpoint_list += f'{endpoint_}:{json.loads(requests.get(
