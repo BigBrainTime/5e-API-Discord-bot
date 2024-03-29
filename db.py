@@ -180,7 +180,7 @@ def api_key_access(request, sqllogic, sqlparams):
                 "imageID": results[creature][1],
                 "userID": results[creature][2],
                 "time": results[creature][3],
-                "ranked": results[creature][4],
+                "ranking": results[creature][4],
                 "voted": results[creature][5]
             }
         return results
