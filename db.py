@@ -33,10 +33,29 @@ def init():
         time INT
         )"""
     )
+
+    cursor.execute(
+        """CREATE TABLE IF NOT EXISTS suggestions(
+        suggestion STR,
+        userID INT,
+        time INT
+        )"""
+    )
+    
+        
           
     close(connection)
 
 init()
+
+def send_suggestion(suggestion, user_id):
+    connection, cursor = connect()
+
+    cursor.execute("INSERT INTO suggestions VALUES (?, ?, ?)",
+                   (suggestion, user_id, int(time())))
+
+    close(connection)
+
 
 def add_image(creature, image_ID, userID) -> None:
     connection, cursor = connect()
@@ -184,6 +203,20 @@ def api_key_access(request, sqllogic, sqlparams):
                 "voted": results[creature][5]
             }
         return results
+    
+    elif request == "suggestions":
+        cursor.execute(f"SELECT * FROM suggestions WHERE {sqllogic}", sqlparams)
+        
+        results = cursor.fetchall()
+        close(connection)
+        for suggestion in range(len(results)):
+            results[suggestion] = {
+                "suggestion": results[suggestion][0],
+                "userID": results[suggestion][1],
+                "time": results[suggestion][2]
+            }
+        return results
+          
 
     close(connection)
     return "Invalid Request"

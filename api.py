@@ -44,6 +44,12 @@ def image_data():
 
     data = request.get_json()
     basic_logic = data.get('logic')
+    table = "get_image_data"
+    if "table" in data:
+        if data.get("table") in config['allowed_tables']:
+            table = data.get("table")
+        else:
+            return errors["Unauthorized"]
 
     logic_results = jsonsql.logic_parse(basic_logic)
     if not logic_results[0]:
@@ -53,7 +59,7 @@ def image_data():
     if not isinstance(sql_params, tuple):
         sql_params = (sql_params,)
 
-    result_data = db.api_key_access("get_image_data", sql_string, sql_params)
+    result_data = db.api_key_access(table, sql_string, sql_params)
 
     results = {
         "count":len(result_data),

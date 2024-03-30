@@ -10,16 +10,27 @@
         "SELECT"
     ],
     "allowed_items": [
-        "*"
+        "*",
+        "creature",
+        "imageID",
+        "userID",
+        "time",
+        "ranking",
+        "voted"
     ],
     "allowed_connections": [
         "WHERE"
     ],
     "allowed_tables": [
-        "images"
+        "images",
+        "suggestions"
     ],
     "allowed_columns": {
         "creature": "str",
-        "userID": "int"
+        "imageID": "str",
+        "userID": "int",
+        "time": "int",
+        "ranking": "int",
+        "voted": "int"
     }
 }

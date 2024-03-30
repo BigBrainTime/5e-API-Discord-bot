@@ -286,6 +286,23 @@ async def revoke_apikeys(interaction: discord.Interaction, user: discord.Member)
     await interaction.response.send_message(f"Revoked all API keys for {user.mention}", ephemeral=True)
 
 
+@tree.command(name="suggestions", guild=discord.Object(id=SERVERID))
+async def suggestions(interaction: discord.Interaction, suggestion: str):
+    """
+    Sends a suggestion to the database
+
+    Parameters:
+    interaction (discord.Interaction): The interaction object
+    suggestion (str): The suggestion
+
+    Returns:
+    None. Sends ephemeral response.
+    """
+
+    db.send_suggestion(suggestion, interaction.user.id)
+    await interaction.response.send_message("Thanks for the suggestion!", ephemeral=True)
+
+
 @client.event
 async def on_ready():
     await tree.sync(guild=discord.Object(id=SERVERID))
