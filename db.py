@@ -316,7 +316,7 @@ def api_key_access(request: str, sqllogic: str, sqlparams: tuple):
     if not isinstance(sqlparams, tuple):
         sqlparams = (sqlparams,)
 
-    if request == "get_image_data":
+    if request == "images":
         cursor.execute(f"SELECT * FROM images WHERE {sqllogic}", sqlparams)
 
         results = cursor.fetchall()

@@ -244,7 +244,7 @@ async def pick_least_voted(interaction: discord.Interaction):
     await interaction.followup.send(f"Cast your vote for this image of `{creature}` submitted by `{client.get_user(userID)}` that has {ranking}/{total_votes} votes:", view=view, file=discord.File(creature_path), ephemeral=True)
 
 
-@tree.command(name="generate_api_key", description="Generate a personal API key", guild=discord.Object(id=SERVERID))
+@tree.command(name="generate_api_key", description="Generate a personal API key")#, guild=discord.Object(id=SERVERID)) #DISABLED COMMAND
 async def generate_api_key(interaction: discord.Interaction, key_name: str = ""):
     """
     Generates a new API key for the user and saves it to the database.
@@ -267,7 +267,7 @@ async def generate_api_key(interaction: discord.Interaction, key_name: str = "")
     db.add_apikey(key, interaction.user.id, key_name)
 
 
-@tree.command(name="revoke_apikeys", description="Revoke all api keys for a user", guild=discord.Object(id=SERVERID))
+@tree.command(name="revoke_apikeys", description="Revoke all api keys for a user")#, guild=discord.Object(id=SERVERID)) #DISABLED COMMAND
 async def revoke_apikeys(interaction: discord.Interaction, user: discord.Member):
     """Revokes all API keys associated with the given user ID in the database.
 

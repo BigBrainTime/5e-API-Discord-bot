@@ -1,10 +1,10 @@
 import requests
 
 query = {
-    "logic": {"creature":"owlbear"}
+    "logic": {"userID":{">":0}}
 }
 
 response = requests.get(
-    'http://127.0.0.1:8080/api/image_data', json=query)
+    'http://127.0.0.1:8080/api/database/suggestions', json=query)
 
 print(response.text)

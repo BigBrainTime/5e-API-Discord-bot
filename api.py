@@ -30,26 +30,24 @@ errors = {
 
 @app.get('/api')
 def api_home():
-    endpoints = ["image_data","get_image_ids","get_image"]
+    endpoints = ["/get_image_ids","/get_image","/database"]
     return orjson.dumps(endpoints)
 
-@app.get('/api/image_data')
-def image_data():
+
+@app.get("/api/database", defaults={"table": ""})
+@app.get('/api/database/<table>')
+def image_data(table):
     #auth_header = request.headers.get('Authorization')
     #if not auth_header:
     #    return errors['Missing Authorization header']
     
     #if not db.verify_apikey(auth_header):
     #    return errors['Invalid API key']
+    if table == "":
+        return orjson.dumps(["/images","/suggestions"])
 
     data = request.get_json()
     basic_logic = data.get('logic')
-    table = "get_image_data"
-    if "table" in data:
-        if data.get("table") in config['allowed_tables']:
-            table = data.get("table")
-        else:
-            return errors["Unauthorized"]
 
     logic_results = jsonsql.logic_parse(basic_logic)
     if not logic_results[0]:
