@@ -29,7 +29,7 @@ level0Accounts = config["level0Accounts"]
 
 allowed_image_urls = config["allowed_image_urls"]
 
-intents = discord.Intents().all()
+intents = discord.Intents().default()
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
 
