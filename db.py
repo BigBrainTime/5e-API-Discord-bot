@@ -313,6 +313,9 @@ def api_key_access(request: str, sqllogic: str, sqlparams: tuple):
 
     connection, cursor = connect()
 
+    if not isinstance(sqlparams, tuple):
+        sqlparams = (sqlparams,)
+
     if request == "get_image_data":
         cursor.execute(f"SELECT * FROM images WHERE {sqllogic}", sqlparams)
 
