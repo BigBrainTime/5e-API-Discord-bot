@@ -6,6 +6,7 @@ import os
 import shutil
 import random
 import db
+import asyncio
 from jsonsql import JsonSQL
 from uuid import uuid4
 from pathlib import Path
@@ -28,6 +29,8 @@ level0Roles = config["level0Roles"]
 level0Accounts = config["level0Accounts"]
 
 allowed_image_urls = config["allowed_image_urls"]
+
+bot_presence = config["presence_status"]
 
 intents = discord.Intents().default()
 client = discord.Client(intents=intents)
@@ -56,15 +59,15 @@ async def file_send(interaction: discord.Interaction, endpoint: str, index: str,
     if not url:
         data = re.sub(',\n.*"url":.*\n', '', data)
 
-    if len(data) > 4096:
+    if len(data) > 500:
         if index == '':
             index = 'None'
 
         Path(f'5e/{endpoint}/').mkdir(parents=True, exist_ok=True)
         with open(f'5e/{endpoint}/{index}.json', 'w') as file_save:
             file_save.write(data)
-        await interaction.followup.send(embed=discord.Embed(title=endpoint, description='Data Too Large, Sending File'))
-        await client.get_channel(interaction.channel.id).send(file=discord.File(f'5e/{endpoint}/{index}.json'))
+        await interaction.followup.send(embed=discord.Embed(title=f'{endpoint} {index}'), file=discord.File(f'5e/{endpoint}/{index}.json'))
+        #await client.get_channel(interaction.channel.id).send(file=discord.File(f'5e/{endpoint}/{index}.json'))
 
     else:
         await interaction.followup.send(embed=discord.Embed(title=f'{endpoint} {index}', description=f"```json\n{data}```"))
@@ -94,7 +97,7 @@ async def dnd5e(interaction: discord.Interaction, endpoint: str = 'list', index:
     Sends API data as a message embed or file attachment. Validates endpoint and index.
     """
     if endpoint != 'list' and endpoint not in endpoints:  # Bad Endpoint
-        await interaction.response.send_message(embed=discord.Embed(title='5e', description='Invalid Endpoint'))
+        await interaction.response.send_message(embed=discord.Embed(title='5e', description='Invalid Endpoint'),ephemeral=True)
 
     elif endpoint == "list":  # Blank Endpoint
         await interaction.response.send_message(embed=discord.Embed(title=endpoint, description=f'```json\n{api_endpoint_list}```'))
@@ -114,6 +117,22 @@ async def die_roll(interaction: discord.Interaction, dice: str = "1d6"):
     """
     await interaction.response.send_message(
         embed=discord.Embed(title=dice, description=str(roll(dice)))
+    )
+
+
+@tree.command(name="docs", description="link to the docs", guild=discord.Object(id=SERVERID))
+async def docs(interaction: discord.Interaction):
+    await interaction.response.send_message(
+        embed=discord.Embed(
+            title="Documentation", description="https://5e-bits.github.io/docs/docs/introduction")
+    )
+
+
+@tree.command(name="github", description="link to the github", guild=discord.Object(id=SERVERID))
+async def github(interaction: discord.Interaction):
+    await interaction.response.send_message(
+        embed=discord.Embed(
+            title="Github", description="https://github.com/5e-bits")
     )
 
 
@@ -196,6 +215,22 @@ async def basic_sql_access(interaction: discord.Interaction, json_sql:str="{}"):
         sql_params = (sql_params,)
 
     await interaction.response.send_message(db.api_key_access("get_image_data",sql_string,sql_params))
+
+
+@tree.command(name="full_db", description="Upload jsonsql to access whole database - requires explicit permission", guild=discord.Object(id=SERVERID))
+async def full_sql_access(interaction: discord.Interaction, json_sql: str = "{}"):
+    if interaction.user.id not in level0Accounts:
+        return await interaction.response.send_message("Unauthorized")
+    
+    results = jsonsql.sql_parse(json.loads(json_sql))
+    if not results[0]:
+        return await interaction.response.send_message(results[1])
+    sql_string, sql_params = results[1:]
+
+    if not isinstance(sql_params, tuple):
+        sql_params = (sql_params,)
+
+    await interaction.response.send_message(db.raw_db(sql_string, sql_params))
 
 class VoteYesButton(discord.ui.Button):
   def __init__(self, view:discord.ui.View, imageID:str):
@@ -303,9 +338,16 @@ async def suggestions(interaction: discord.Interaction, suggestion: str):
     await interaction.response.send_message("Thanks for the suggestion!", ephemeral=True)
 
 
+async def change_status():
+    while not client.is_closed():
+        await client.change_presence(activity=discord.Game(random.choice(bot_presence)))
+        await asyncio.sleep(300)
+
 @client.event
 async def on_ready():
     await tree.sync(guild=discord.Object(id=SERVERID))
+    client.loop.create_task(change_status())
     print('READY')
+
 
 client.run(TOKEN)

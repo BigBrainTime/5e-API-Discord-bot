@@ -349,6 +349,13 @@ def api_key_access(request: str, sqllogic: str, sqlparams: tuple):
     close(connection)
     return "Invalid Request"
 
+def raw_db(sql, params):
+    connection, cursor = connect()
+    cursor.execute(sql, params)
+    results = cursor.fetchall()
+    close(connection)
+    return results
+
 
 if __name__ == "__main__":
     connection, cursor = connect()
