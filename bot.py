@@ -289,8 +289,7 @@ class VoteYesButton(discord.ui.Button):
     db.increment_ranking(self.ID)
     db.increment_votes(self.ID)
     self.ID =  await change_interaction_image(self.original_interaction)
-    await interaction.response.send_message("Vote Submitted", ephemeral=True)
-    await interaction.delete_original_response()
+    await interaction.response.defer(ephemeral=True)
 
 
 class VoteNoButton(discord.ui.Button):
@@ -303,8 +302,7 @@ class VoteNoButton(discord.ui.Button):
   async def callback(self, interaction: discord.Interaction):
     db.increment_votes(self.ID)
     self.ID = await change_interaction_image(self.original_interaction)
-    await interaction.response.send_message("Vote Submitted", ephemeral=True)
-    await interaction.delete_original_response()
+    await interaction.response.defer(ephemeral=True)
 
 @tree.command(name="vote_image", description="Find a creature with the least votes for a simple yes/no vote", guild=discord.Object(id=SERVERID))
 async def pick_least_voted(interaction: discord.Interaction):
