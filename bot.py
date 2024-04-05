@@ -267,8 +267,16 @@ async def full_sql_access(interaction: discord.Interaction, json_sql: str = "{}"
 
     await interaction.response.send_message(db.raw_db(sql_string, sql_params))
 
-def change_interaction_image(interaction:discord.Interaction):
-    pass
+async def change_interaction_image(interaction:discord.Interaction):
+    creature, imageID, total_votes, ranking, userID = random.choice(db.get_bottom_voted())
+
+    embed = discord.Embed(title=f"Cast your vote for this image of `{creature}` submitted by `{client.get_user(userID)}` that has {ranking}/{total_votes} votes:")
+
+    embed.set_image(url=f"http://85.239.244.69:5000/api/get_image/{creature}/{imageID}")
+
+    await interaction.edit_original_response(embed=embed)
+
+    return imageID
 
 class VoteYesButton(discord.ui.Button):
   def __init__(self, view:discord.ui.View, imageID:str, original_interaction:discord.Interaction):
@@ -280,7 +288,7 @@ class VoteYesButton(discord.ui.Button):
   async def callback(self, interaction: discord.Interaction):
     db.increment_ranking(self.ID)
     db.increment_votes(self.ID)
-    await change_interaction_image(self.original_interaction)
+    self.ID =  await change_interaction_image(self.original_interaction)
 
 
 class VoteNoButton(discord.ui.Button):
@@ -292,7 +300,7 @@ class VoteNoButton(discord.ui.Button):
 
   async def callback(self, interaction: discord.Interaction):
     db.increment_votes(self.ID)
-    await change_interaction_image(self.original_interaction)
+    self.ID = await change_interaction_image(self.original_interaction)
 
 @tree.command(name="vote_image", description="Find a creature with the least votes for a simple yes/no vote", guild=discord.Object(id=SERVERID))
 async def pick_least_voted(interaction: discord.Interaction):
@@ -309,15 +317,16 @@ async def pick_least_voted(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=True)
     creature, imageID, total_votes, ranking, userID = random.choice(db.get_bottom_voted())
 
-    creature_path = os.path.join("images", creature, f"{imageID}.jpg")
-
     view = discord.ui.View()
     view.add_item(VoteNoButton(view, imageID, interaction))
     view.add_item(VoteYesButton(view, imageID, interaction))
 
     embed = discord.Embed(title=f"Cast your vote for this image of `{creature}` submitted by `{client.get_user(userID)}` that has {ranking}/{total_votes} votes:")
 
-    await interaction.followup.send(embed=embed, view=view, file=discord.File(creature_path), ephemeral=True)
+    embed.set_image(url=f"http://85.239.244.69:5000/api/get_image/{creature}/{imageID}")
+    print(f"http://85.239.244.69:5000/api/get_image/{creature}/{imageID}")
+
+    await interaction.followup.send(embed=embed, view=view, ephemeral=True)
 
 
 @tree.command(name="generate_api_key", description="Generate a personal API key")#, guild=discord.Object(id=SERVERID)) #DISABLED COMMAND

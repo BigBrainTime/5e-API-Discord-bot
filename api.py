@@ -85,7 +85,7 @@ def get_image(creature, imageID):
         creaturelist = db.get_all_creatures()
         results = {
             "count":len(creaturelist),
-            "data":creaturelist
+            "data":[result[0] for result in creaturelist]
         }
 
         return orjson.dumps(results)
