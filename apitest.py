@@ -5,6 +5,6 @@ query = {
 }
 
 response = requests.get(
-    'http://127.0.0.1:8080/api/database/suggestions', json=query)
+    'http://127.0.0.1:5000/api/get_image_ids', json=query)
 
 print(response.text)

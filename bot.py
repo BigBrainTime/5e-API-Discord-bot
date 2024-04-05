@@ -124,7 +124,7 @@ async def die_roll(interaction: discord.Interaction, dice: str = "1d6"):
 async def docs(interaction: discord.Interaction):
     await interaction.response.send_message(
         embed=discord.Embed(
-            title="Documentation", description="https://5e-bits.github.io/docs/docs/introduction")
+            title="Documentation", description="https://5e-bits.github.io/docs/introduction")
     )
 
 
@@ -135,6 +135,41 @@ async def github(interaction: discord.Interaction):
             title="Github", description="https://github.com/5e-bits")
     )
 
+
+@tree.command(name="rules", description="link to the rules", guild=discord.Object(id=SERVERID))
+async def rules(interaction: discord.Interaction):
+    await interaction.response.send_message(
+        embed=discord.Embed(
+            title="Rules", description="https://github.com/5e-bits/5e-database/wiki/Code-of-Conduct")
+    )
+
+
+@tree.command(name="faq", description="link to the faq", guild=discord.Object(id=SERVERID))
+async def faq(interaction: discord.Interaction):
+    await interaction.response.send_message(
+        embed=discord.Embed(
+            title="FAQs", description="https://5e-bits.github.io/docs/faq")
+    )
+
+
+@tree.command(name="help", description="Get the help page", guild=discord.Object(id=SERVERID))
+async def help(interaction: discord.Interaction, command:str=""):
+    with open(os.path.join("help_pages","help.txt")) as f:
+        help_text = f.read()
+    command_list = re.findall(
+        "__(?P<title>.+)__\n+(?P<desc>[^\n]*\n(\n.*){4})", help_text)
+    command_dict = {}
+    for entry in command_list:
+        command_dict[entry[0]]=entry[1]
+
+    if command == "":
+        await interaction.response.send_message(embed=discord.Embed(title="Help Page", description=help_text))
+    
+    elif command not in command_dict:
+        await interaction.response.send_message(embed=discord.Embed(title="Help Page", description=f"Command {command} not found"))
+
+    else:
+        await interaction.response.send_message(embed=discord.Embed(title=f"Help Page - {command}", description=command_dict[command]))
 
 def user_allowed_db(user, accounts_only=False):
     """Checks if a user is allowed to access a database.
@@ -232,28 +267,32 @@ async def full_sql_access(interaction: discord.Interaction, json_sql: str = "{}"
 
     await interaction.response.send_message(db.raw_db(sql_string, sql_params))
 
+def change_interaction_image(interaction:discord.Interaction):
+    pass
+
 class VoteYesButton(discord.ui.Button):
-  def __init__(self, view:discord.ui.View, imageID:str):
+  def __init__(self, view:discord.ui.View, imageID:str, original_interaction:discord.Interaction):
     super().__init__(style=discord.ButtonStyle.green, label="Yes")
+    self.original_interaction=original_interaction
     self.button_view = view
     self.ID = imageID
 
   async def callback(self, interaction: discord.Interaction):
-    self.button_view.stop()
-    await interaction.response.send_message("Vote Submitted", ephemeral=True)
     db.increment_ranking(self.ID)
     db.increment_votes(self.ID)
+    await change_interaction_image(self.original_interaction)
+
 
 class VoteNoButton(discord.ui.Button):
-  def __init__(self, view: discord.ui.View, imageID: str):
+  def __init__(self, view: discord.ui.View, imageID: str, original_interaction: discord.Interaction):
     super().__init__(style=discord.ButtonStyle.red, label="No")
+    self.original_interaction = original_interaction
     self.button_view = view
     self.ID = imageID
 
   async def callback(self, interaction: discord.Interaction):
-    self.button_view.stop()
-    await interaction.response.send_message("Vote Submitted", ephemeral=True)
     db.increment_votes(self.ID)
+    await change_interaction_image(self.original_interaction)
 
 @tree.command(name="vote_image", description="Find a creature with the least votes for a simple yes/no vote", guild=discord.Object(id=SERVERID))
 async def pick_least_voted(interaction: discord.Interaction):
@@ -273,10 +312,12 @@ async def pick_least_voted(interaction: discord.Interaction):
     creature_path = os.path.join("images", creature, f"{imageID}.jpg")
 
     view = discord.ui.View()
-    view.add_item(VoteNoButton(view, imageID))
-    view.add_item(VoteYesButton(view, imageID))
+    view.add_item(VoteNoButton(view, imageID, interaction))
+    view.add_item(VoteYesButton(view, imageID, interaction))
 
-    await interaction.followup.send(f"Cast your vote for this image of `{creature}` submitted by `{client.get_user(userID)}` that has {ranking}/{total_votes} votes:", view=view, file=discord.File(creature_path), ephemeral=True)
+    embed = discord.Embed(title=f"Cast your vote for this image of `{creature}` submitted by `{client.get_user(userID)}` that has {ranking}/{total_votes} votes:")
+
+    await interaction.followup.send(embed=embed, view=view, file=discord.File(creature_path), ephemeral=True)
 
 
 @tree.command(name="generate_api_key", description="Generate a personal API key")#, guild=discord.Object(id=SERVERID)) #DISABLED COMMAND
@@ -340,7 +381,9 @@ async def suggestions(interaction: discord.Interaction, suggestion: str):
 
 async def change_status():
     while not client.is_closed():
-        await client.change_presence(activity=discord.Game(random.choice(bot_presence)))
+        chosen = random.choice(bot_presence)
+        await client.change_presence(activity=discord.Game(chosen))
+
         await asyncio.sleep(300)
 
 @client.event

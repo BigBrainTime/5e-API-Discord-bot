@@ -1,0 +1,9 @@
+{
+    "query": "SELECT",
+    "items": [{ "COUNT": "imageID" }],
+    "table": "images",
+    "connection": "WHERE",
+    "logic": {
+        "userID": { "=": 342001099190042626 }
+    }
+}

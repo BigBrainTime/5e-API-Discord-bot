@@ -1,0 +1,65 @@
+You seem to have stumbled across a help page, what do you do?
+
+__help__
+Displays a help page or sub page
+
+Usage:
+```
+/help [command]
+```
+
+__suggestions__
+Leave a suggestion for us!
+
+Usage:
+```
+/suggestions [suggestion]
+```
+
+__roll__
+Rolls dice for you
+
+Usage:
+```
+/roll [dice]
+```
+
+__dnd5e__
+Handles interactions with the D&D 5E API.
+
+Usage:
+```
+/dnd5e [endpoint] [index] [url:bool](optional)
+```
+
+__docs__
+Provides a link to the documentation.
+
+Usage:
+```
+/docs
+```
+
+__github__
+Provides a link to the GitHub repository.
+
+Usage:
+```
+/github
+```
+
+__rules__
+Provides a link to the rules.
+
+Usage:
+```
+/rules
+```
+
+__faq__
+Provides a link to the FAQ.
+
+Usage:
+```
+/faq
+```

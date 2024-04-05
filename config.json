@@ -1,11 +1,12 @@
 {
     "TOKEN": "",
-    "ServerID": 0,
+    "ServerID": 656547667601653787,
     "HOST": "0.0.0.0",
-    "PORT": 8080,
-    "level0Roles": [],
-    "level0Accounts": [],
+    "PORT": 5000,
+    "level0Roles": [728687672213897277],
+    "level0Accounts": [342001099190042626, 215620941873414144],
     "allowed_image_urls": ["https://cdn.discordapp.com/"],
+    "presence_status": ["D&D", "with a d20", "with the API"],
     "allowed_queries": [
         "SELECT"
     ],
