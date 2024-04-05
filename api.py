@@ -81,16 +81,16 @@ def get_image_ids():
 @app.get("/api/get_image/<creature>",defaults={"imageID":""})
 @app.get("/api/get_image/<creature>/<imageID>")
 def get_image(creature, imageID):
+    creaturelist = [result[0] for result in db.get_all_creatures()]
     if creature == "":
-        creaturelist = db.get_all_creatures()
         results = {
             "count":len(creaturelist),
-            "data":[result[0] for result in creaturelist]
+            "data":creaturelist
         }
 
         return orjson.dumps(results)
     
-    if creature not in db.get_all_creatures():
+    if creature not in creaturelist:
         return errors["Not Valid Creature"]
     
     if imageID == "":
