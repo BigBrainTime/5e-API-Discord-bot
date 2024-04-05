@@ -301,6 +301,7 @@ class VoteNoButton(discord.ui.Button):
   async def callback(self, interaction: discord.Interaction):
     db.increment_votes(self.ID)
     self.ID = await change_interaction_image(self.original_interaction)
+    interaction.response
 
 @tree.command(name="vote_image", description="Find a creature with the least votes for a simple yes/no vote", guild=discord.Object(id=SERVERID))
 async def pick_least_voted(interaction: discord.Interaction):
@@ -324,7 +325,6 @@ async def pick_least_voted(interaction: discord.Interaction):
     embed = discord.Embed(title=f"Cast your vote for this image of `{creature}` submitted by `{client.get_user(userID)}` that has {ranking}/{total_votes} votes:")
 
     embed.set_image(url=f"http://85.239.244.69:5000/api/get_image/{creature}/{imageID}")
-    print(f"http://85.239.244.69:5000/api/get_image/{creature}/{imageID}")
 
     await interaction.followup.send(embed=embed, view=view, ephemeral=True)
 

@@ -93,16 +93,16 @@ def get_image(creature, imageID):
     if creature not in creaturelist:
         return errors["Not Valid Creature"]
     
+    IDlist = db.get_image_ids_by_creature(creature)
     if imageID == "":
-        IDlist = db.get_image_ids_by_creature(creature)
         results = {
             "count": len(IDlist),
-            "data": [ID.replace(".jpg","") for ID in IDlist]
+            "data": [ID[0].replace(".jpg","") for ID in IDlist]
         }
 
         return orjson.dumps(results)
 
-    if f"{imageID}.jpg" not in db.get_image_ids_by_creature(creature):
+    if imageID not in [ID[0] for ID in IDlist]:
         realcreature = db.get_creature(imageID)
         if realcreature is None:
             return errors["Not Valid imageID"]
