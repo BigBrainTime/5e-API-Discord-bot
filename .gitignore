@@ -2,3 +2,6 @@
 VENV/
 config.json
 /images
+database/images.db
+config.json
+*.pyc
